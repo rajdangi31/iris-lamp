@@ -76,7 +76,7 @@ Iris/
 
 🔧 Deployment Guide
 1. Clone Repo
-git clone https://github.com/rajdangi31/Iris.git
+git clone https://github.com/rajdangi31/iris-lamp.git
 cd Iris
 
 2. Install Dependencies
