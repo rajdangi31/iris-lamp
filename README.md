@@ -1,175 +1,181 @@
-# Iris — High-Availability Web System (Arch Linux + Ubuntu VM)
+Iris — High-Availability Web System
+(Arch Linux + Ubuntu VM, HAProxy + Tailscale, Automated Sync)
 
-📌 **Author:**  
-**Raj Dangi** — Architect, Engineer, Researcher
+📌 Author:
+Raj Dangi — Architect · Engineer · Researcher
 
-> Designed and implemented independently.  
-> Acknowledgment to **Jay Doshi** and **Purshottam Singh Thakur** for early exploratory configuration support.
+Designed, implemented, documented, and tested independently.
+Acknowledgment to Jay Doshi and Purshottam Singh Thakur for early exploratory configuration support.
 
----
-
-## 🚀 Overview
+🚀 Overview
 
 Iris is a reproducible high-availability infrastructure built entirely on:
 
-- Commodity hardware
-- Arch Linux (primary node)
-- Ubuntu Server VM (backup node)
-- HAProxy for failover and routing control
-- Tailscale private mesh networking
-- Automated data synchronization
+Arch Linux (primary node)
 
-This project demonstrates that **reliable service continuity can be achieved without cloud providers or enterprise clustering frameworks**.
+Ubuntu Server VM (backup node)
 
-✔ ~3-second failover  
-✔ ~5-second recovery  
-✔ Negligible latency penalty  
-✔ Proven DB + file consistency  
+HAProxy for intelligent load balancing & failover
 
----
+Tailscale for private, encrypted connectivity
 
-## 📌 Features
+Rsync + mysqldump for periodic state synchronization
 
-- Private encrypted overlay networking
-- Node health detection and traffic rerouting
-- Automatic failover + failback
-- Periodic file replication
-- Periodic database replication
-- Verifiable test logs and screenshots
-- IEEE-formatted research paper documenting methodology and results
+This project proves that reliable service continuity is achievable without cloud services or enterprise orchestration frameworks, using nothing but commodity hardware and open-source tooling.
 
----
+✔ Automatic backend health detection
+✔ Transparent failover and failback
+✔ File + database synchronization
+✔ Repeatable experiment results
+✔ Full audit evidence and research documentation
 
-## 📂 Repository Contents
+✨ Features
 
+Encrypted private overlay network via Tailscale
+
+Primary/backup architecture
+
+HAProxy-based failover within ~3 seconds
+
+Automatic failback on service restoration
+
+5-minute file sync interval
+
+10-minute database sync interval
+
+Reproducible artifact set (configs/scripts/logs)
+
+IEEE-formatted research paper documenting design and results
+
+📂 Repository Layout
 Iris/
-├── README.md → this document
-├── LICENSE → open-source terms
-├── docs/ → paper + diagrams
-│ ├── Iris-Paper.pdf
-├── figures/ → screenshots of results
-│ ├── primary-node-identity.png
-│ ├── backup-node-identity.png
-│ ├── haproxy-conf.png
-│ ├── file-sync-logs.png
-│ └── db-sync-logs.png
-├── config/ → reproducible configuration artifacts
-│ ├── haproxy.cfg
-│ ├── apache.conf
-│ ├── tailscale-notes.md
-│ ├── cron-schedule.md
-├── scripts/ → automation logic
-│ ├── sync_files.sh
-│ ├── sync_db.sh
-├── logs/ → evidence that system ran
-│ ├── sync_files.log
-│ └── sync_db.log
-├── webroot_snapshot_primary/ → application state before failover
-├── webroot_snapshot_backup/ → synchronized backup copy
-└── sql/ → database export + seed state
-├── iris_db_schema.sql
-└── iris_db_test_data.sql
+├── README.md                     → this document
+├── LICENSE                       → open-source terms
+├── docs/                         → paper + explanations
+│   └── Iris-Paper.pdf
+├── figures/                      → screenshots + evidence
+│   ├── primary-node-identity.png
+│   ├── backup-node-identity.png
+│   ├── haproxy-conf.png
+│   ├── file-sync-logs.png
+│   └── db-sync-logs.png
+├── config/                       → reproducible configs
+│   ├── haproxy.cfg
+│   ├── apache.conf
+│   ├── tailscale-notes.md
+│   └── cron-schedule.md
+├── scripts/                      → automation logic
+│   ├── sync_files.sh
+│   └── sync_db.sh
+├── logs/                         → verifiable execution output
+│   ├── sync_files.log
+│   └── sync_db.log
+└── sql/                          → database artifacts
+    ├── iris_db_schema.sql
+    └── iris_db_test_data.sql
 
-
----
-
-## 🖥️ Architecture Diagram
-
-<p align="center">
-  <img src="docs/architecture-diagram.png" width="600">
-</p>
-
----
-
-## 🔧 Deployment Guide
-
-### 1. Clone
-
-```bash
-git clone https://github.com/YOUR_USERNAME/Iris.git
+🔧 Deployment Guide
+1. Clone Repo
+git clone https://github.com/rajdangi31/Iris.git
 cd Iris
 
-2. Install dependencies
+2. Install Dependencies
 
-Apache, MariaDB, HAProxy, Tailscale.
+Install on both nodes:
 
-3. Join tailscale network
+Apache
+
+MariaDB
+
+HAProxy
+
+Tailscale
+
+3. Join Tailscale Network
 sudo tailscale up --authkey=<KEY>
 
-4. Deploy webroot
+
+Verify private mesh connectivity:
+
+tailscale ip
+tailscale status
+
+4. Deploy Website Content
 sudo rsync -av webroot_snapshot_primary/ /var/www/html/
 
-5. Apply HAProxy config
+5. Apply HAProxy Configuration
 sudo cp config/haproxy.cfg /etc/haproxy/haproxy.cfg
 sudo systemctl restart haproxy
 
-6. Import database
-mysql -u iris_user -p iris_db < sql/iris_db_schema.sql
-mysql -u iris_user -p iris_db < sql/iris_db_test_data.sql
-
-7. Enable cron automation
+6. Enable Periodic Synchronization
 crontab config/cron-schedule.md
 
+
+This enables:
+
+File sync every 5 minutes
+
+DB sync every 10 minutes
+
 📊 Results Summary
+Metric	Result
+Failover time	≈ 3 seconds
+Failback time	≈ 5 seconds
+Primary latency	~0.010s
+Backup latency	~0.012s
+File sync interval	5 minutes
+DB replication interval	10 minutes
 
-Failover: ~3 seconds
-
-Failback: ~5 seconds
-
-Primary latency: 0.010s
-
-Backup latency: 0.012s
-
-Files synced within 5 minutes
-
-Database replicated within 10 minutes
-
-Screenshots and logs verifying these results are in /docs and /figures.
+Screenshots, logs, and replication proof exist in docs/, figures/, and logs/.
 
 📜 Research Publication
 
-Full IEEE-formatted project report:
+📄 Full IEEE-formatted project paper:
+docs/Iris-Paper.pdf
 
-📄 docs/Iris_Paper.pdf
+Includes:
+
+Motivation
+
+System architecture
+
+Implementation
+
+Evaluation
+
+Results
+
+Lessons learned
 
 🙏 Acknowledgments
 
-Anushka Sharad Kumavat for reviewing and helping me out with the paper.
+Anushka Sharad Kumavat — manuscript review assistance
 
-Early exploratory HAProxy + sync work supported by:
+Jay Doshi — early HAProxy exploration
 
-Jay Doshi
+Purshottam Singh Thakur — initial multi-node VM testing
 
-Purshottam Singh Thakur
-
-All system implementation, architecture design, automation logic, validation, results, diagrams, and research writing done by Raj Dangi.
+All system design, automation, failover logic, infrastructure setup, debugging, diagrams, and research reporting were performed independently by Raj Dangi.
 
 📬 Contact
 
 📧 rdangi@rockets.utoledo.edu
 
+
 🏛️ University of Toledo
 
+✔ Final Author Notes
 
+Artifacts originate from live systems:
 
----
+apache.conf → exported from /etc/httpd/conf/httpd.conf
 
----
+cron-schedule.md → output of crontab -l
 
-# ✔ Final Notes
+tailscale-notes.md → install + addressing notes
 
-You now know:
+iris_db_schema.sql → mysqldump --no-data iris_db
 
-### Where EACH missing file comes from
-✔ apache.conf → copy from `/etc/httpd/conf/httpd.conf`  
-✔ cron-schedule.md → output of `crontab -l`  
-✔ tailscale-notes.md → your install + IP notes  
-✔ iris_db_schema.sql → `mysqldump --no-data`  
-✔ iris_db_test_data.sql → `mysqldump --no-create-info`
+iris_db_test_data.sql → mysqldump --no-create-info iris_db
 
-### How to commit them
-
-```bash
-git add config scripts sql docs logs figures
-git commit -m "Added configs, schema, docs & evidence"
-git push
+Version-controlled evidence ensures reproducibility and credibility.
