@@ -116,13 +116,5 @@ Based on the evaluation in **[docs/Paper-IRIS.pdf](docs/Paper-IRIS.pdf)**, the s
 
 ---
 
-## 📜 Publication
-This project is documented in the research paper: *“Design and Evaluation of a Low-Cost, Two-Node High-Availability Web Infrastructure using Open-Source Tools”* presented at the **IEEE IRIS Conference**.
-
-**Authors**: Raj Dangi, Purshottam Singh Thakur
-**Institution**: University of Toledo
-
----
-
 ## 📄 License
 Distributed under the Apache 2.0 License. See `LICENSE` for more information.
