@@ -1,0 +1,12 @@
+# Environment
+.env
+.ipynb_checkpoints
+
+# OS 
+.DS_Store
+Thumbs.db
+
+# Project specific
+logs/*.log
+*.txt
+extract_pdf.py

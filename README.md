@@ -1,181 +1,128 @@
-Iris — High-Availability Web System
-(Arch Linux + Ubuntu VM, HAProxy + Tailscale, Automated Sync)
+# Iris — High-Availability Web Infrastructure
+
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![UToledo](https://img.shields.io/badge/Institution-University_of_Toledo-gold.svg)](https://www.utoledo.edu/)
+
+**Iris** is a research-backed, low-cost high-availability (HA) LAMP stack designed for resource-constrained environments. It leverages open-source tools to provide fault tolerance and automated failover across heterogeneous nodes (Arch Linux + Ubuntu VM) connected via an encrypted Tailscale overlay network.
+
+---
+
+## 🏗️ System Architecture
+
+Iris utilizes a **Primary/Backup** model with eventual consistency, managed by an intelligent load balancer.
+
+```mermaid
+graph TD
+    Client((Client)) -->|Port 80| HAProxy[HAProxy Load Balancer]
+    
+    subgraph "Primary Node (Arch Linux)"
+        HAProxy -->|Localhost:8080| Apache1[Apache Server]
+        Apache1 --> DB1[(MariaDB)]
+        Health1[health.php] -.->|Check| DB1
+    end
+
+    subgraph "Backup Node (Ubuntu VM)"
+        HAProxy -->|Tailscale IP:80| Apache2[Apache Server]
+        Apache2 --> DB2[(MariaDB)]
+        Health2[health.php] -.->|Check| DB2
+    end
+
+    Apache1 -->|Rsync / 5m| Apache2
+    DB1 -->|mysqldump / 10m| DB2
+    
+    HAProxy -.->|Poll| Health1
+    HAProxy -.->|Failover| Health2
+```
+
+### Key Components
+- **Load Balancer**: HAProxy for intelligent health monitoring and failover.
+- **Networking**: Tailscale for encrypted P2P connectivity between nodes.
+- **Web Stack**: Linux, Apache, MariaDB, PHP (LAMP).
+- **Sync Engine**: Rsync (files) and Mysqldump (database) automated via Cron/Inotify.
+
+---
+
+## 📊 Research Results
+
+Based on the evaluation in **[docs/Paper-IRIS.pdf](docs/Paper-IRIS.pdf)**, the system achieves the following benchmarks:
+
+| Metric | Result |
+| :--- | :--- |
+| **Failover Response Time** | ≈ 3 Seconds |
+| **Failback Recovery Time** | ≈ 5 Seconds |
+| **Primary Latency** | ~0.010s |
+| **Backup Latency** | ~0.012s (+0.002s overhead) |
+| **Data Consistency** | Eventual (5-10m propagation) |
+
+---
+
+## 📂 Repository Structure
+
+```text
+.
+├── src/                # Web Application Source
+│   ├── index.php       # Landing Page
+│   ├── identity.php    # Node Identification
+│   └── health.php      # Failover Health Check
+├── config/             # System Configurations
+│   ├── haproxy.cfg     # HAProxy failover rules
+│   ├── apache.conf     # Apache vhost examples
+│   └── cron-schedule   # Automation schedule
+├── scripts/            # Automation Logic
+│   ├── sync_files.sh   # File replication
+│   ├── sync_db.sh      # Database replication
+│   └── watch_sync.sh   # [NEW] Continuous sync engine
+├── sql/                # Database Artifacts
+│   ├── schema.sql      # Database structure
+│   └── seeds.sql       # Test data
+├── docs/               # Research Documentation
+│   ├── Paper-IRIS.pdf   # Full research paper
+│   └── figures/        # Verification screenshots
+└── .env.example        # Configuration template
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1. Prerequisites
+- **Primary**: Arch Linux (or similar)
+- **Backup**: Ubuntu Server (Local or VM)
+- **Shared**: Tailscale, Apache, MariaDB, HAProxy
+
+### 2. Deployment
+1. **Clone & Setup**:
+   ```bash
+   git clone https://github.com/rajdangi31/iris-lamp.git
+   cp .env.example .env
+   # Edit .env with your Tailscale IPs and DB credentials
+   ```
+
+2. **Backend Config**:
+   Deploy the `src/` directory to `/var/www/html/` on both nodes. Ensure `identity.php` is unique to each node to verify routing.
 
-📌 Author:
-Raj Dangi — Architect · Engineer · Researcher
+3. **Load Balancer**:
+   Apply `config/haproxy.cfg` to your primary node:
+   ```bash
+   sudo cp config/haproxy.cfg /etc/haproxy/haproxy.cfg
+   sudo systemctl restart haproxy
+   ```
 
-Designed, implemented, documented, and tested independently.
-Acknowledgment to Jay Doshi and Purshottam Singh Thakur for early exploratory configuration support.
+4. **Synchronization**:
+   Enable the periodic sync via crontab or use the new continuous sync:
+   ```bash
+   bash scripts/watch_sync.sh
+   ```
 
-🚀 Overview
+---
 
-Iris is a reproducible high-availability infrastructure built entirely on:
+## 📜 Publication
+This project is documented in the research paper: *“Design and Evaluation of a Low-Cost, Two-Node High-Availability Web Infrastructure using Open-Source Tools”* presented at the **IEEE IRIS Conference**.
 
-Arch Linux (primary node)
+**Authors**: Raj Dangi, Purshottam Singh Thakur
+**Institution**: University of Toledo
 
-Ubuntu Server VM (backup node)
+---
 
-HAProxy for intelligent load balancing & failover
-
-Tailscale for private, encrypted connectivity
-
-Rsync + mysqldump for periodic state synchronization
-
-This project proves that reliable service continuity is achievable without cloud services or enterprise orchestration frameworks, using nothing but commodity hardware and open-source tooling.
-
-✔ Automatic backend health detection
-✔ Transparent failover and failback
-✔ File + database synchronization
-✔ Repeatable experiment results
-✔ Full audit evidence and research documentation
-
-✨ Features
-
-Encrypted private overlay network via Tailscale
-
-Primary/backup architecture
-
-HAProxy-based failover within ~3 seconds
-
-Automatic failback on service restoration
-
-5-minute file sync interval
-
-10-minute database sync interval
-
-Reproducible artifact set (configs/scripts/logs)
-
-IEEE-formatted research paper documenting design and results
-
-📂 Repository Layout
-Iris/
-├── README.md                     → this document
-├── LICENSE                       → open-source terms
-├── docs/                         → paper + explanations
-│   └── Iris-Paper.pdf
-├── figures/                      → screenshots + evidence
-│   ├── primary-node-identity.png
-│   ├── backup-node-identity.png
-│   ├── haproxy-conf.png
-│   ├── file-sync-logs.png
-│   └── db-sync-logs.png
-├── config/                       → reproducible configs
-│   ├── haproxy.cfg
-│   ├── apache.conf
-│   ├── tailscale-notes.md
-│   └── cron-schedule.md
-├── scripts/                      → automation logic
-│   ├── sync_files.sh
-│   └── sync_db.sh
-├── logs/                         → verifiable execution output
-│   ├── sync_files.log
-│   └── sync_db.log
-└── sql/                          → database artifacts
-    ├── iris_db_schema.sql
-    └── iris_db_test_data.sql
-
-🔧 Deployment Guide
-1. Clone Repo
-git clone https://github.com/rajdangi31/iris-lamp.git
-cd Iris
-
-2. Install Dependencies
-
-Install on both nodes:
-
-Apache
-
-MariaDB
-
-HAProxy
-
-Tailscale
-
-3. Join Tailscale Network
-sudo tailscale up --authkey=<KEY>
-
-
-Verify private mesh connectivity:
-
-tailscale ip
-tailscale status
-
-4. Deploy Website Content
-sudo rsync -av webroot_snapshot_primary/ /var/www/html/
-
-5. Apply HAProxy Configuration
-sudo cp config/haproxy.cfg /etc/haproxy/haproxy.cfg
-sudo systemctl restart haproxy
-
-6. Enable Periodic Synchronization
-crontab config/cron-schedule.md
-
-
-This enables:
-
-File sync every 5 minutes
-
-DB sync every 10 minutes
-
-📊 Results Summary
-Metric	Result
-Failover time	≈ 3 seconds
-Failback time	≈ 5 seconds
-Primary latency	~0.010s
-Backup latency	~0.012s
-File sync interval	5 minutes
-DB replication interval	10 minutes
-
-Screenshots, logs, and replication proof exist in docs/, figures/, and logs/.
-
-📜 Research Publication
-
-📄 Full IEEE-formatted project paper:
-docs/Iris-Paper.pdf
-
-Includes:
-
-Motivation
-
-System architecture
-
-Implementation
-
-Evaluation
-
-Results
-
-Lessons learned
-
-🙏 Acknowledgments
-
-Anushka Sharad Kumavat — manuscript review assistance
-
-Jay Doshi — early HAProxy exploration
-
-Purshottam Singh Thakur — initial multi-node VM testing
-
-All system design, automation, failover logic, infrastructure setup, debugging, diagrams, and research reporting were performed independently by Raj Dangi.
-
-📬 Contact
-
-📧 rdangi@rockets.utoledo.edu
-
-
-🏛️ University of Toledo
-
-✔ Final Author Notes
-
-Artifacts originate from live systems:
-
-apache.conf → exported from /etc/httpd/conf/httpd.conf
-
-cron-schedule.md → output of crontab -l
-
-tailscale-notes.md → install + addressing notes
-
-iris_db_schema.sql → mysqldump --no-data iris_db
-
-iris_db_test_data.sql → mysqldump --no-create-info iris_db
-
-Version-controlled evidence ensures reproducibility and credibility.
+## 📄 License
+Distributed under the Apache 2.0 License. See `LICENSE` for more information.
